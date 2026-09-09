@@ -36,6 +36,16 @@ const modules = [
     ['2.4', 'Copy a roaming profile user', 'Copy a user, then change the profile path and home-drive ID for the new account.', 'Practice route', 'Copy the existing user → set the new password → user Properties → Profile → update the profile path and home-folder destination for the new ID.'],
     ['3.1', 'Create a mandatory profile', 'Create the MAN share, assign the profile path, then change NTUSER.DAT to NTUSER.MAN.', 'Key route', 'Share <b>MAN</b> → assign <code>\\WIN-SERVER\\MAN\\%username%</code> in Profile path → create the profile folder → reveal hidden items and file extensions → rename <code>NTUSER.DAT</code> to <code>NTUSER.MAN</code> → run <code>gpupdate /force</code>.'],
     ['3.2', 'Verify a mandatory profile', 'Confirm the Mandatory type, make a desktop change, sign out, and confirm the change did not persist.', 'Run / route', '<code>sysdm.cpl</code> → Advanced → User Profiles → Settings → confirm <b>Mandatory</b>. Make a desktop change, sign out, then sign in again to test persistence.']
+  ]},
+  { id: 'groups-quota', number: '05', icon: '◫', color: '#5188c7', fade: '#e4f0ff', title: 'Group Accounts and Disk Quota', short: 'Create and manage groups, then control disk use with quotas.', slides: 30, pdf: 'Module 05 Group User Accounts and Disk Quota.pdf', topics: [
+    ['1.1', 'Group user accounts', 'Use group accounts to assign permissions and rights to multiple users at once.', 'Concept', 'Built-in groups assign rights and privileges. Custom groups make it easier to assign permissions when sharing data.'],
+    ['1.2', 'Built-in groups', 'Recognize the groups used most often in a domain lab.', 'Concept', '<b>Domain Users</b> is assigned to new accounts by default. <b>Domain Admins</b> has full domain administration rights.'],
+    ['1.4', 'Create a group', 'Create a custom group inside the correct Organizational Unit.', 'Route', 'Server Manager → Tools → Active Directory Users and Computers → select OU → right-click → New → Group → enter group name → OK.'],
+    ['1.5', 'Add a user to a group', 'Add a domain user through the group membership list.', 'Route', 'Active Directory Users and Computers → right-click group → Properties → Members → Add → enter username → Check Names → OK → Apply.'],
+    ['1.6', 'Remove a group from a user', 'Remove an existing group membership from a user account.', 'Route', 'Active Directory Users and Computers → right-click user → Properties → Member Of → select group → Remove → Yes → OK.'],
+    ['1.7', 'Add a group to a user', 'Add group membership from the user account properties.', 'Route', 'Active Directory Users and Computers → right-click user → Properties → Member Of → Add → enter group name → Check Names → OK → Apply.'],
+    ['2.1', 'Configure disk quota for one user', 'Set a disk limit and warning level for a selected user.', 'Route', 'Right-click drive → Properties → Quota → Enable quota management → Deny disk space to users exceeding quota limit → Quota Entries → New → enter username → Check Names → set limit and warning → OK → Apply.'],
+    ['2.2', 'Configure disk quota for all users', 'Set a default disk limit and warning level for every user of a drive.', 'Route', 'Right-click drive → Properties → Quota → Enable quota management → Deny disk space to users exceeding quota limit → Limit disk space to → set limit and warning → Apply → OK.']
   ]}
 ];
 
@@ -63,6 +73,41 @@ const questions = [
   { module:'MODULE 03 · OUS', q:'What should you do before deleting an OU that has deletion protection enabled?', choices:['Disable the domain controller','Uncheck Protect object from accidental deletion','Delete all users first','Run gpupdate /force'], answer:1, explain:'In AD Users and Computers, enable View → Advanced Features, open the OU Properties, and uncheck Protect object from accidental deletion before deleting it.' },
   { module:'MODULE 01 · SYSTEM', q:'What setting lets the server shut down from the logon screen?', choices:['Display Shutdown Event Tracker = Disabled','Shutdown: Allow system to be shut down without having to log on = Enabled','Do not require CTRL+ALT+DEL = Enabled','Minimum password length = 0'], answer:1, explain:'In the relevant Security Options policy, enable “Shutdown: Allow system to be shut down without having to log on,” then restart.' },
   { module:'MODULE 02 · DOMAIN', q:'Which tool can you use to create a user in the makara.com domain?', choices:['dsa.msc','msconfig','gpedit.msc','notepad.exe'], answer:0, explain:'dsa.msc opens Active Directory Users and Computers. Expand the domain, choose Users or an OU, then New → User.' }
+];
+
+// Practice is deliberately route-first: commands supplement the visual path, never replace it.
+const routeQuestions = [
+  { id:'install-server', moduleId:'installation', task:'Install Windows Server 2025 with Desktop Experience', route:['Boot from Windows Server installation media','Choose language and keyboard','Install now','Choose Windows Server 2025 Standard Evaluation (Desktop Experience)','Accept license','Custom installation','Select or partition Disk 0','Next','Install','Set Administrator password','Sign in and verify'], hints:['Start at the Windows Server setup screen.','Choose the Desktop Experience edition before choosing the disk.'] },
+  { id:'shutdown-tracker', moduleId:'installation', task:'Disable Shutdown Event Tracker', route:['Run gpedit.msc','Computer Configuration','Administrative Templates','System','Display Shutdown Event Tracker','Disabled','Apply','Restart'], shortcut:'gpedit.msc', hints:['This is a local policy setting.','Open Local Group Policy Editor.'] },
+  { id:'ctrl-alt-del', moduleId:'installation', task:'Remove the Ctrl + Alt + Del sign-in requirement', route:['Run secpol.msc','Security Settings','Local Policies','Security Options','Interactive logon: Do not require CTRL+ALT+DEL','Enabled','Apply','Restart'], shortcut:'secpol.msc', hints:['This is a local security option.','Open Local Security Policy.'] },
+  { id:'shutdown-logon-screen', moduleId:'installation', task:'Allow shutdown from the logon screen', route:['Run gpedit.msc','Computer Configuration','Windows Settings','Security Settings','Local Policies','Security Options','Shutdown: Allow system to be shut down without having to log on','Enabled','Apply','Restart'], shortcut:'gpedit.msc', hints:['This is a Security Options setting.','Open Local Group Policy Editor first.'] },
+  { id:'hostname', moduleId:'active-directory', task:'Change the server hostname', route:['Server Manager','Local Server','Computer Name','Change','Enter new hostname','Restart'], shortcut:'sysdm.cpl', hints:['Start from Server Manager.','Open the Local Server page.'] },
+  { id:'static-ip', moduleId:'active-directory', task:'Configure a static IPv4 address', route:['Server Manager','Local Server','Ethernet','Change adapter options','Right-click Ethernet','Properties','Internet Protocol Version 4 (TCP/IPv4)','Properties','Use the following IP address','Enter IP / Subnet / Gateway / DNS','OK'], shortcut:'ncpa.cpl', hints:['Start from Server Manager.','Select the Ethernet link on Local Server.'] },
+  { id:'install-adds', moduleId:'active-directory', task:'Install Active Directory Domain Services', route:['Server Manager','Manage','Add Roles and Features','Role-based or feature-based installation','Select server','Active Directory Domain Services','Add Features','Next','Install'], hints:['Start from Server Manager.','Open Manage.'] },
+  { id:'promote-dc', moduleId:'active-directory', task:'Promote the server to a Domain Controller', route:['Server Manager','Notification flag','Promote this server to a domain controller','Add a new forest','Enter root domain name','Set DSRM password','Next','Install','Restart'], hints:['Look at the notification flag after AD DS is installed.','Choose the promotion link.'] },
+  { id:'create-forest', moduleId:'active-directory', task:'Create a new forest', route:['Server Manager','Notification flag','Promote this server to a domain controller','Add a new forest','Enter root domain name','Set DSRM password','Next','Install','Restart'], hints:['This begins after the AD DS role is installed.','Use the notification flag.'] },
+  { id:'create-domain-user', moduleId:'active-directory', task:'Create a domain user', route:['Server Manager','Tools','Active Directory Users and Computers','Expand domain','Users or target OU','Right-click','New','User','Enter user details','Set password','Finish'], shortcut:'dsa.msc', hints:['Start from Server Manager.','Open Tools, then Active Directory Users and Computers.'] },
+  { id:'join-domain', moduleId:'active-directory', task:'Join a Windows client to the domain', route:['Set preferred DNS to Domain Controller IP','Confirm connection / ping','Open System Properties','Computer Name','Change','Select Domain','Enter domain name','Enter administrator credentials','Restart','Sign in with domain account'], shortcut:'sysdm.cpl', hints:['Before joining, make sure the client can find the Domain Controller.','Set the client preferred DNS to the Domain Controller IP.'] },
+  { id:'install-backup', moduleId:'active-directory', task:'Install Windows Server Backup', route:['Server Manager','Manage','Add Roles and Features','Features','Windows Server Backup','Next','Install'], hints:['Start from Server Manager.','Open Manage and choose Add Roles and Features.'] },
+  { id:'system-state-backup', moduleId:'active-directory', task:'Back up System State', route:['Server Manager','Tools','Windows Server Backup','Local Backup','Backup Once','Different options','Custom','Add Items','System state','Next','Backup'], hints:['Open the backup tool from Server Manager.','Choose a one-time backup, then select the items yourself.'] },
+  { id:'create-ou', moduleId:'ou-users', task:'Create a new Organizational Unit', route:['Server Manager','Tools','Active Directory Users and Computers','Right-click domain','New','Organizational Unit','Enter name','OK'], shortcut:'dsa.msc', hints:['Start from Server Manager.','Open Tools.'] },
+  { id:'password-policy', moduleId:'ou-users', task:'Set the domain password policy', route:['Server Manager','Tools','Group Policy Management','Forest','Domains','Domain','Right-click Default Domain Policy','Edit','Computer Configuration','Policies','Windows Settings','Security Settings','Account Policies','Password Policy','Open setting','Properties','Apply','gpupdate /force'], shortcut:'gpmc.msc', hints:['Use the domain policy tool, not local policy.','Open Group Policy Management from Tools.'] },
+  { id:'create-user-ou', moduleId:'ou-users', task:'Create a user inside an OU', route:['Server Manager','Tools','Active Directory Users and Computers','Expand domain','Select OU','Right-click','New','User','Enter user details','Set password','Finish'], shortcut:'dsa.msc', hints:['Start in Active Directory Users and Computers.','Choose the OU before creating the user.'] },
+  { id:'logon-hours', moduleId:'ou-users', task:'Set a user’s logon hours', route:['Server Manager','Tools','Active Directory Users and Computers','Open user Properties','Account','Logon Hours','Set permitted hours','OK'], shortcut:'dsa.msc', hints:['Open the domain user properties.','Use the Account tab.'] },
+  { id:'delegate-ou', moduleId:'ou-users', task:'Delegate control of an OU', route:['Server Manager','Tools','Active Directory Users and Computers','Right-click OU','Delegate Control','Next','Add user','Choose delegated tasks','Finish'], shortcut:'dsa.msc', hints:['Start in Active Directory Users and Computers.','Right-click the OU, not the domain user.'] },
+  { id:'cached-logons', moduleId:'ou-users', task:'Disable cached domain logons', route:['Run gpedit.msc','Computer Configuration','Windows Settings','Security Settings','Local Policies','Security Options','Interactive logon: Number of previous logons to cache','Set value to 0','Apply','gpupdate /force'], shortcut:'gpedit.msc', hints:['This is a local Security Options setting.','Open Local Group Policy Editor.'] },
+  { id:'login-rights', moduleId:'ou-users', task:'Change server logon rights', route:['Server Manager','Tools','Group Policy Management','Default Domain Policy','Edit','Computer Configuration','Policies','Windows Settings','Security Settings','Local Policies','User Rights Assignment','Open Allow log on locally or Shut down the system','Add Administrators','Apply'], shortcut:'gpmc.msc', hints:['Open the domain Group Policy Management tool.','Go to User Rights Assignment under Local Policies.'] },
+  { id:'roaming-profile', moduleId:'profiles', task:'Create a roaming profile', route:['Create and share HomeDir folder','Set share and NTFS permissions','Server Manager','Tools','Active Directory Users and Computers','Open user Properties','Profile','Profile path','Enter \\\\WIN-SERVER\\HomeDir\\%username%','Apply','Sign in from client to test'], shortcut:'dsa.msc', hints:['Create the shared folder first.','Then open the user properties in Active Directory Users and Computers.'] },
+  { id:'home-drive', moduleId:'profiles', task:'Map a home drive', route:['Server Manager','Tools','Active Directory Users and Computers','Open user Properties','Profile','Home folder','Connect drive letter','Enter network path','Apply'], shortcut:'dsa.msc', hints:['Open the user properties.','Use the Profile tab.'] },
+  { id:'mandatory-profile', moduleId:'profiles', task:'Create a mandatory profile', route:['Create and share MAN folder','Server Manager','Tools','Active Directory Users and Computers','Open user Properties','Profile','Profile path','Enter \\\\WIN-SERVER\\MAN\\%username%','Apply','Create profile folder','Show hidden items and file extensions','Rename NTUSER.DAT to NTUSER.MAN','gpupdate /force','Test sign-in'], shortcut:'dsa.msc', hints:['Create the MAN share first.','Set the user Profile path before changing the profile file.'] },
+  { id:'verify-mandatory', moduleId:'profiles', task:'Verify a mandatory profile', route:['Client computer','System Properties','Advanced','User Profiles','Settings','Confirm Mandatory','Make a desktop change','Sign out','Sign in again','Confirm change did not persist'], shortcut:'sysdm.cpl', hints:['Do this from the client.','Open System Properties and use the Advanced tab.'] },
+  { id:'create-group', moduleId:'groups-quota', task:'Create a group inside an OU', route:['Server Manager','Tools','Active Directory Users and Computers','Select OU','Right-click','New','Group','Enter group name','OK'], shortcut:'dsa.msc', hints:['Start from Server Manager.','Open Tools, then Active Directory Users and Computers.'] },
+  { id:'add-user-to-group', moduleId:'groups-quota', task:'Add a user to a group', route:['Server Manager','Tools','Active Directory Users and Computers','Right-click group','Properties','Members','Add','Enter username','Check Names','OK','Apply'], shortcut:'dsa.msc', hints:['Open the group properties.','Use the Members tab.'] },
+  { id:'remove-group-from-user', moduleId:'groups-quota', task:'Remove a group from a user', route:['Server Manager','Tools','Active Directory Users and Computers','Right-click user','Properties','Member Of','Select group','Remove','Yes','OK'], shortcut:'dsa.msc', hints:['Open the user properties.','Use the Member Of tab.'] },
+  { id:'add-group-to-user', moduleId:'groups-quota', task:'Add a group to a user', route:['Server Manager','Tools','Active Directory Users and Computers','Right-click user','Properties','Member Of','Add','Enter group name','Check Names','OK','Apply'], shortcut:'dsa.msc', hints:['Open the user properties.','Use the Member Of tab.'] },
+  { id:'user-disk-quota', moduleId:'groups-quota', task:'Configure a disk quota for one user', route:['Right-click selected drive','Properties','Quota','Enable quota management','Deny disk space to users exceeding quota limit','Quota Entries','New','Enter username','Check Names','OK','Limit disk space to','Set warning level','OK','Apply'], hints:['Start from the drive that needs a quota.','Open its Properties and use the Quota tab.'] },
+  { id:'all-users-disk-quota', moduleId:'groups-quota', task:'Configure a disk quota for all users', route:['Right-click selected drive','Properties','Quota','Enable quota management','Deny disk space to users exceeding quota limit','Limit disk space to','Set warning level','Apply','OK'], hints:['Start from the drive that needs a quota.','Open its Properties and use the Quota tab.'] },
+  { id:'verify-disk-quota', moduleId:'groups-quota', task:'Verify a configured disk quota', route:['Sign in with configured user','Right-click configured quota drive','Properties','Capacity','Confirm quota limit and warning','Try saving a file larger than the limit'], hints:['Test from the client as the configured user.','Open the properties of the quota drive.'] }
 ];
 
 let activeModule = modules[0];
@@ -174,3 +219,163 @@ $('#question-total').textContent = questions.length;
 renderModules();
 renderCommands();
 startQuiz();
+
+const routeMemoryKey = 'server-study-route-memory';
+const routeSessionKey = 'server-study-route-sessions';
+let routeSession = [];
+let routeIndex = 0;
+let routeScore = 0;
+let routeRevealed = false;
+let orderSelection = [];
+
+function getRouteMemory() {
+  try { return JSON.parse(localStorage.getItem(routeMemoryKey)) || {}; } catch { return {}; }
+}
+function saveRouteMemory(memory) { localStorage.setItem(routeMemoryKey, JSON.stringify(memory)); }
+function getSessionCount() { return Number(localStorage.getItem(routeSessionKey) || 0); }
+function routeState(id) { return getRouteMemory()[id]?.state || 'new'; }
+function routePriority(question) { return ({ forgot:0, almost:1, new:2, remembered:3 })[routeState(question.id)]; }
+function routeMarkup(route) {
+  return `<ol class="route-steps">${route.map((step, index) => `<li><span>${index + 1}</span><b>${escapeHTML(step)}</b></li>`).join('')}</ol>`;
+}
+function currentRouteTask() { return routeSession[routeIndex]; }
+function updateRouteDashboard() {
+  const memory = getRouteMemory();
+  const remembered = routeQuestions.filter(item => memory[item.id]?.state === 'remembered').length;
+  const review = routeQuestions.filter(item => ['forgot', 'almost'].includes(memory[item.id]?.state)).length;
+  const readiness = Math.round((remembered / routeQuestions.length) * 100);
+  const stats = $('.stats');
+  if (!stats) return;
+  stats.innerHTML = `
+    <div class="stat-card"><span class="stat-icon violet">→</span><div><b>${remembered} / ${routeQuestions.length}</b><span>Routes mastered</span></div></div>
+    <div class="stat-card"><span class="stat-icon gold">!</span><div><b>${review}</b><span>Routes to review</span></div></div>
+    <div class="stat-card"><span class="stat-icon mint">✓</span><div><b>${getSessionCount()}</b><span>Practice sessions</span></div></div>
+    <div class="stat-card"><span class="stat-icon coral">✦</span><div><b>${readiness}%</b><span>Exam readiness</span></div></div>`;
+  const weak = routeQuestions.filter(item => ['forgot', 'almost'].includes(memory[item.id]?.state)).map(item => item.task);
+  const copy = $('.exam-callout p:last-of-type');
+  if (copy) copy.textContent = weak.length ? `Weakest routes: ${weak.slice(0, 3).join(' · ')}.` : 'Rate routes after revealing them. Your weak routes will appear here.';
+}
+function buildPracticeShell() {
+  $('#practice').innerHTML = `
+    <div class="page-intro practice-intro"><p class="overline">PROCEDURAL MEMORY LAB</p><h1>Task → route → <em>repeat.</em></h1><p>Picture the Windows Server screen first. Recall where you go, reveal only when ready, then rate the route honestly.</p></div>
+    <div class="practice-layout"><section class="quiz-card route-practice-card" aria-live="polite"><div class="quiz-top"><span id="quiz-module">ROUTE PRACTICE</span><span id="quiz-progress">Task 1 of 10</span></div><div class="quiz-meter"><span id="quiz-meter-fill"></span></div><div id="practice-content"></div></section><aside class="practice-side"><div class="score-card"><p class="overline">ROUTE MEMORY SCORE</p><strong id="score">0<span>/ 10</span></strong><p id="practice-score-note">Rate honestly after you reveal each route.</p></div><div class="challenge-card"><span>→</span><div><p class="overline">RECALL PROMPT</p><h3>Where do I go next?</h3><p>Commands are shortcuts, not the main answer. Build the visual path first.</p></div></div></aside></div>`;
+}
+function buildRouteSession(weakOnly = false) {
+  const ordered = [...routeQuestions].sort(() => Math.random() - .5).sort((a, b) => routePriority(a) - routePriority(b));
+  const candidates = weakOnly ? ordered.filter(item => ['forgot', 'almost'].includes(routeState(item.id))) : ordered;
+  const pool = candidates.length ? candidates : ordered;
+  const routes = Array.from({ length:7 }, (_, index) => ({ type:'route', question:pool[index % pool.length] }));
+  const find = id => routeQuestions.find(item => item.id === id);
+  routeSession = [
+    routes[0],
+    { type:'order', question:find('join-domain') },
+    routes[1],
+    { type:'next', question:find('install-adds'), prefix:['Server Manager','Manage','Add Roles and Features'] },
+    routes[2],
+    { type:'where', question:find('create-ou') },
+    routes[3], routes[4], routes[5], routes[6]
+  ];
+  routeIndex = 0; routeScore = 0; renderRouteTask();
+}
+function taskHeading(type, question) {
+  const prompts = {
+    route:'How do you get there?',
+    where:'Where do you go?',
+    order:'Put the steps in the right order.',
+    next:'What comes next?'
+  };
+  return `<p class="task-label">${type === 'next' ? 'WHAT NEXT?' : type === 'order' ? 'STEP ORDER' : 'TASK'}</p><h2>${escapeHTML(question.task)}</h2><p class="route-prompt">${prompts[type]} <b>Recall the visual route before you reveal it.</b></p>`;
+}
+function hintPanel(question) {
+  return `<div class="hint-panel" id="hint-panel" hidden></div><div class="route-actions"><button class="button button-ghost-light" id="hint-button">Hint</button><button class="button button-primary" id="reveal-route">Reveal Full Route <span>→</span></button></div>`;
+}
+function renderRouteTask() {
+  const task = currentRouteTask();
+  routeRevealed = false; orderSelection = [];
+  $('#quiz-progress').textContent = `Task ${routeIndex + 1} of ${routeSession.length}`;
+  $('#quiz-meter-fill').style.width = `${((routeIndex + 1) / routeSession.length) * 100}%`;
+  $('#quiz-module').textContent = task.type === 'route' ? 'ROUTE RECALL' : task.type.toUpperCase() + ' PRACTICE';
+  $('#score').innerHTML = `${routeScore}<span>/ ${routeSession.length}</span>`;
+  if (task.type === 'order') renderOrderTask(task); else if (task.type === 'next') renderNextTask(task); else renderRecallTask(task);
+}
+function renderRecallTask(task) {
+  $('#practice-content').innerHTML = `${taskHeading(task.type, task.question)}${hintPanel(task.question)}<div id="route-answer"></div>`;
+  attachHints(task.question);
+  $('#reveal-route').addEventListener('click', () => revealRoute(task.question));
+}
+function attachHints(question) {
+  let hintIndex = 0;
+  $('#hint-button').addEventListener('click', () => {
+    const panel = $('#hint-panel'); panel.hidden = false;
+    panel.innerHTML = `<b>Hint ${Math.min(hintIndex + 1, question.hints.length)}</b><span>${escapeHTML(question.hints[Math.min(hintIndex, question.hints.length - 1)])}</span>`;
+    hintIndex += 1;
+    $('#hint-button').textContent = hintIndex >= question.hints.length ? 'Hint shown' : 'Another hint';
+    if (hintIndex >= question.hints.length) $('#hint-button').disabled = true;
+  });
+}
+function revealRoute(question, note = '') {
+  routeRevealed = true;
+  const shortcut = question.shortcut ? `<div class="shortcut-note"><b>Shortcut (after you know the route)</b><code>Win + R → ${escapeHTML(question.shortcut)}</code></div>` : '';
+  $('#route-answer').innerHTML = `<section class="revealed-route"><p class="overline">CORRECT ROUTE</p>${note}${routeMarkup(question.route)}${shortcut}</section>${ratingControls(question)}`;
+  const reveal = $('#reveal-route'); if (reveal) reveal.disabled = true;
+  const hint = $('#hint-button'); if (hint) hint.disabled = true;
+  bindRatings(question);
+}
+function ratingControls(question) {
+  return `<div class="rating-box"><p>How well did you remember the way?</p><div><button class="memory-rating forgot" data-rating="forgot">Forgot the way</button><button class="memory-rating almost" data-rating="almost">Almost remembered</button><button class="memory-rating remembered" data-rating="remembered">Remembered</button></div></div>`;
+}
+function bindRatings(question) {
+  document.querySelectorAll('[data-rating]').forEach(button => button.addEventListener('click', () => recordRouteRating(question, button.dataset.rating)));
+}
+function recordRouteRating(question, state) {
+  const memory = getRouteMemory(); memory[question.id] = { state, updatedAt:Date.now() }; saveRouteMemory(memory);
+  if (state === 'remembered') routeScore += 1;
+  updateRouteDashboard();
+  if (routeIndex === routeSession.length - 1) finishRouteSession(); else { routeIndex += 1; renderRouteTask(); }
+}
+function renderOrderTask(task) {
+  const route = task.question.route;
+  const shuffled = [...route].sort(() => Math.random() - .5);
+  $('#practice-content').innerHTML = `${taskHeading('order', task.question)}<p class="order-instruction">Select a step from the bank to build the route. If you make a mistake, remove it from your answer.</p><div class="order-answer" id="order-answer"><span>Build the order here</span></div><div class="step-bank" id="step-bank">${shuffled.map((step, index) => `<button data-step="${index}">${escapeHTML(step)}</button>`).join('')}</div><div class="route-actions"><button class="button button-primary" id="check-order" disabled>Check order</button></div><div id="route-answer"></div>`;
+  document.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', () => {
+    const step = shuffled[Number(button.dataset.step)]; orderSelection.push(step); button.disabled = true;
+    $('#order-answer').innerHTML = orderSelection.map((item, index) => `<button data-remove="${index}"><span>${index + 1}</span>${escapeHTML(item)} ×</button>`).join('');
+    $('#check-order').disabled = orderSelection.length !== route.length;
+    document.querySelectorAll('[data-remove]').forEach(remove => remove.addEventListener('click', () => { const removed = orderSelection.splice(Number(remove.dataset.remove), 1)[0]; const originalIndex = shuffled.indexOf(removed); document.querySelector(`[data-step="${originalIndex}"]`).disabled = false; $('#order-answer').innerHTML = orderSelection.length ? orderSelection.map((item, index) => `<button data-remove="${index}"><span>${index + 1}</span>${escapeHTML(item)} ×</button>`).join('') : '<span>Build the order here</span>'; $('#check-order').disabled = true; }));
+  }));
+  $('#check-order').addEventListener('click', () => { const correct = route.every((step, index) => step === orderSelection[index]); const note = `<p class="order-result ${correct ? 'correct-result' : 'wrong-result'}"><b>${correct ? 'Correct order.' : 'Review the order below.'}</b> ${correct ? 'You recalled the full procedure.' : 'Use the numbered route to notice where the order changed.'}</p>`; revealOrderAnswer(task.question, note); });
+}
+function revealOrderAnswer(question, note) {
+  $('#route-answer').innerHTML = `<section class="revealed-route"><p class="overline">CORRECT SEQUENCE</p>${note}${routeMarkup(question.route)}</section>${ratingControls(question)}`;
+  $('#check-order').disabled = true; bindRatings(question);
+}
+function renderNextTask(task) {
+  const expectedIndex = task.prefix.length;
+  const answer = task.question.route[expectedIndex];
+  const choices = [answer, 'Features', 'Select server', 'Install'].filter((item, index, all) => all.indexOf(item) === index).sort(() => Math.random() - .5);
+  $('#practice-content').innerHTML = `${taskHeading('next', task.question)}<div class="next-prefix">${task.prefix.map(item => `<span>${escapeHTML(item)}</span>`).join('<i>→</i>')}<i>→</i><strong>?</strong></div><div class="quiz-options">${choices.map(item => `<button class="quiz-option next-choice" data-next="${escapeHTML(item)}">${escapeHTML(item)}</button>`).join('')}</div><div id="route-answer"></div>`;
+  document.querySelectorAll('.next-choice').forEach(button => button.addEventListener('click', () => { const correct = button.dataset.next === answer; document.querySelectorAll('.next-choice').forEach(choice => { choice.disabled = true; if (choice.dataset.next === answer) choice.classList.add('correct'); else if (choice === button) choice.classList.add('wrong'); }); const note = `<p class="order-result ${correct ? 'correct-result' : 'wrong-result'}"><b>${correct ? 'Exactly.' : 'Not this time.'}</b> The next step is <b>${escapeHTML(answer)}</b>.</p>`; $('#route-answer').innerHTML = `<section class="revealed-route"><p class="overline">KEEP GOING</p>${note}${routeMarkup(task.question.route)}</section>${ratingControls(task.question)}`; bindRatings(task.question); }));
+}
+function finishRouteSession() {
+  localStorage.setItem(routeSessionKey, String(getSessionCount() + 1)); updateRouteDashboard();
+  const memory = getRouteMemory();
+  const list = state => routeQuestions.filter(item => memory[item.id]?.state === state).map(item => item.task);
+  const group = (title, items, empty) => `<div class="session-group"><h3>${title}</h3>${items.length ? `<ul>${items.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul>` : `<p>${empty}</p>`}</div>`;
+  $('#practice-content').innerHTML = `<div class="session-summary"><p class="task-label">SESSION COMPLETE</p><h2>Route Memory Score: ${routeScore}/${routeSession.length}</h2><p>Keep practicing the routes that still need retrieval effort.</p><div class="session-groups">${group('Forgot', list('forgot'), 'No routes marked forgotten.')}${group('Almost', list('almost'), 'No routes marked almost remembered.')}${group('Strong', list('remembered'), 'No routes marked remembered yet.')}</div><div class="route-actions"><button class="button button-primary" id="weak-routes">Practice Weak Routes Again</button><button class="button button-ghost-light" id="new-session">Start New Route Session</button></div></div>`;
+  $('#weak-routes').addEventListener('click', () => buildRouteSession(true));
+  $('#new-session').addEventListener('click', () => buildRouteSession());
+}
+function initRoutePractice() {
+  buildPracticeShell();
+  document.querySelector('.hero .overline').textContent = 'WINDOWS SERVER 2025 · 5 MODULES';
+  document.querySelector('.hero h1').innerHTML = 'Know the task.<br><em>Recall the way.</em>';
+  document.querySelector('.hero-copy').textContent = 'Train the visual route: where to go, what to open, what to click, and the order that gets the task done.';
+  document.querySelector('.hero-actions [data-view="practice"]').innerHTML = 'Start route practice <span>→</span>';
+  const weakButton = $('.exam-callout .button');
+  weakButton.removeAttribute('data-open-route'); weakButton.dataset.view = 'practice'; weakButton.innerHTML = 'Practice weak routes <span>→</span>';
+  weakButton.addEventListener('click', () => buildRouteSession(true));
+  $('.sidebar-tip p').innerHTML = '<b>Route tip</b><br>Picture the menu first. Use a Run command only as a shortcut after the route is clear.';
+  updateRouteDashboard();
+  buildRouteSession();
+}
+initRoutePractice();
